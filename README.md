@@ -5,8 +5,8 @@
 
 ### Use the following commands
 
-pip install -r requirements.txt
-python sql.py
-python -m streamlit run app.py
+1. pip install -r requirements.txt 
+2. python sql.py
+3. python -m streamlit run app.py
 
 ### Note: Change the python version if needed
