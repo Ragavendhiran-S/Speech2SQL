@@ -6,13 +6,16 @@ import os
 import sqlite3
 
 import google.generativeai as genai
+
 ## Configure Genai Key
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
+conn=sqlite3.connect('student.db')
+cur=conn.cursor()
 ## Function To Load Google Gemini Model and provide queries as response
 
-def get_gemini_response(question,prompt):
+def  get_response(question,prompt):
     model=genai.GenerativeModel('gemini-pro')
     response=model.generate_content([prompt[0],question])
     return response.text
@@ -20,8 +23,7 @@ def get_gemini_response(question,prompt):
 ## Fucntion To retrieve query from the database
 
 def read_sql_query(sql,db):
-    conn=sqlite3.connect(db)
-    cur=conn.cursor()
+    
     cur.execute(sql)
     rows=cur.fetchall()
     conn.commit()
@@ -34,14 +36,15 @@ def read_sql_query(sql,db):
 prompt=[
     """
     You are an expert in converting English questions to SQL query!
-    The SQL database has the name STUDENT and has the following columns - NAME, CLASS, 
-    SECTION \n\nFor example,\nExample 1 - How many entries of records are present?, 
+    The SQL database has the following schema - STUDENT (
+    NAME TEXT,
+    CLASS TEXT,
+    SECTION TEXT,
+    MARKS INTEGER);
+    \nFor example,\nExample 1 - How many entries of records are present?, 
     the SQL command will be something like this SELECT COUNT(*) FROM STUDENT ;
-    \nExample 2 - Tell me all the students studying in Data Science class?, 
-    the SQL command will be something like this SELECT * FROM STUDENT 
-    where CLASS="Data Science"; 
-    also the sql code should not have ``` in beginning or end and sql word in output
-
+    select all from the table - SELECT * FROM STUDENT;
+    also dont include quoations like ``` for the query. And also dont give me any prompt just provide me with query
     """
 ]
 
@@ -58,12 +61,16 @@ submit=st.button("Ask the question")
 # if submit is clicked
 if submit or question:
    try:
-      response=get_gemini_response(question,prompt)
+      response= get_response(question,prompt)
       print(response)
       response=read_sql_query(response,"student.db")
       st.subheader("The Response is")
-      for row in response:
-         print(row)
-         st.header(row)
+      if response:
+        for row in response:
+            print(row)
+            st.header(row)
+      else:
+         st.header("Got Updated !")
+         
    except:
       st.header("Wrong query !")
